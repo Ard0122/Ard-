@@ -1,6 +1,3 @@
--- ARD HUB v2 - Full Features Blox Fruits GUI (Mobile-Friendly, Black Theme)
--- Author: Ard0122 | Inspired by Redz Hub
--- Features: Auto Farm, Sea Beast, Mirage, Skull Guitar, Bones, Quest, Tool Selector, Teleport, More
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
