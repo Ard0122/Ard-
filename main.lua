@@ -1,173 +1,115 @@
+-- ARD HUB - Manual GUI Version (No OrionLib, Fully Mobile Support)
 
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local lp = Players.LocalPlayer
-local mouse = lp:GetMouse()
+local plr = game.Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+local rs = game:GetService("ReplicatedStorage")
 
 -- Anti-AFK
 pcall(function()
     local vu = game:GetService("VirtualUser")
-    lp.Idled:Connect(function()
+    plr.Idled:Connect(function()
         vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
         task.wait(1)
         vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
     end)
 end)
 
--- UI LIBRARY
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "🟥 ARD HUB | Blox Fruits", HidePremium = false, SaveConfig = true, ConfigFolder = "ARDHUB"})
+-- GUI
+local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "ARDHUB_GUI"
 
--- VARIABLES
-local autofarm = false
-local autofarmNearest = false
-local autoSkullGuitar = false
-local autoSeaBeast = false
-local autoMirage = false
-local autoBones = false
-local autoKillReaper = false
-local walkSpeedEnabled = false
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 250, 0, 310)
+frame.Position = UDim2.new(0.02, 0, 0.3, 0)
+frame.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
 
--- TOOLS TAB
-local toolTab = Window:MakeTab({Name = "Tools", Icon = "rbxassetid://6031260786", PremiumOnly = false})
-toolTab:AddDropdown({
-    Name = "Select Tool",
-    Default = "Melee",
-    Options = {"Melee", "Sword", "Gun", "Fruit"},
-    Callback = function(val)
-        local inv = lp.Backpack:GetChildren()
-        for _,v in pairs(inv) do
-            if v:IsA("Tool") and v.ToolTip == val then
-                lp.Character.Humanoid:EquipTool(v)
-            end
-        end
-    end
-})
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Text = "🟥 ARD HUB"
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1,1,1)
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
 
--- FARM TAB
-local farmTab = Window:MakeTab({Name = "Farm", Icon = "rbxassetid://6031071058", PremiumOnly = false})
+local y = 35
+function makeBtn(text, callback)
+    local btn = Instance.new("TextButton", frame)
+    btn.Size = UDim2.new(1, -20, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, y)
+    btn.Text = text
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    btn.BorderSizePixel = 0
+    btn.Font = Enum.Font.SourceSansBold
+    btn.TextSize = 14
+    btn.MouseButton1Click:Connect(callback)
+    y = y + 35
+end
 
-farmTab:AddToggle({
-    Name = "Auto Farm Level",
-    Default = false,
-    Callback = function(v)
-        autofarm = v
-        while autofarm do
-            task.wait()
+-- Toggles
+local autoFarm = false
+local autoNearest = false
+local autoGuitar = false
+
+makeBtn("Auto Farm Level", function()
+    autoFarm = not autoFarm
+    makeBtn("Auto Farm Level ["..(autoFarm and "ON" or "OFF").."]", function() end)
+    task.spawn(function()
+        while autoFarm do
             pcall(function()
-                -- Quest + Attack logic here (basic)
-                for _,v in pairs(workspace.Enemies:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                        lp.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0,-3,2)
-                        ReplicatedStorage.Remotes.Combat:FireServer("Attack", true)
-                        task.wait(0.2)
+                for _,mob in pairs(workspace.Enemies:GetChildren()) do
+                    if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                        plr.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, -3, 2)
+                        rs.Remotes.Combat:FireServer("Attack", true)
+                        task.wait(0.25)
                     end
                 end
             end)
-        end
-    end
-})
-
-farmTab:AddToggle({
-    Name = "Auto Farm Nearest",
-    Default = false,
-    Callback = function(v)
-        autofarmNearest = v
-        while autofarmNearest do
-            task.wait()
-            pcall(function()
-                for _,v in pairs(workspace.Enemies:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
-                        lp.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0,-3,2)
-                        ReplicatedStorage.Remotes.Combat:FireServer("Attack", true)
-                        task.wait(0.2)
-                    end
-                end
-            end)
-        end
-    end
-})
-
-farmTab:AddToggle({
-    Name = "Auto Skull Guitar",
-    Default = false,
-    Callback = function(v)
-        autoSkullGuitar = v
-        while autoSkullGuitar do
             task.wait(0.3)
+        end
+    end)
+end)
+
+makeBtn("Auto Farm Nearest", function()
+    autoNearest = not autoNearest
+    makeBtn("Auto Farm Nearest ["..(autoNearest and "ON" or "OFF").."]", function() end)
+    task.spawn(function()
+        while autoNearest do
             pcall(function()
-                ReplicatedStorage.Remotes.Combat:FireServer("SkullGuitarAttack")
+                for _,mob in pairs(workspace.Enemies:GetChildren()) do
+                    if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                        plr.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0, -3, 2)
+                        rs.Remotes.Combat:FireServer("Attack", true)
+                        task.wait(0.25)
+                    end
+                end
             end)
+            task.wait(0.3)
         end
-    end
-})
+    end)
+end)
 
--- BONES TAB
-local bonesTab = Window:MakeTab({Name = "Bones", Icon = "rbxassetid://6031071059", PremiumOnly = false})
-
-bonesTab:AddToggle({
-    Name = "Auto Farm Bones",
-    Default = false,
-    Callback = function(v)
-        autoBones = v
-        -- Tambahkan logika farming bones dari monster event
-    end
-})
-
-bonesTab:AddToggle({
-    Name = "Auto Kill Soul Reaper",
-    Default = false,
-    Callback = function(v)
-        autoKillReaper = v
-        -- Tambahkan logic lokasi & serang soul reaper boss
-    end
-})
-
--- SEA TAB
-local seaTab = Window:MakeTab({Name = "Sea", Icon = "rbxassetid://6031071053", PremiumOnly = false})
-
-seaTab:AddToggle({
-    Name = "Auto Farm Sea Beast",
-    Default = false,
-    Callback = function(v)
-        autoSeaBeast = v
-        while autoSeaBeast do
-            task.wait()
-            -- Tambahkan logika deteksi + serang Sea Beast
+makeBtn("Auto Skull Guitar", function()
+    autoGuitar = not autoGuitar
+    makeBtn("Auto Skull Guitar ["..(autoGuitar and "ON" or "OFF").."]", function() end)
+    task.spawn(function()
+        while autoGuitar do
+            rs.Remotes.Combat:FireServer("SkullGuitarAttack")
+            task.wait(0.3)
         end
+    end)
+end)
+
+makeBtn("Speed Boost", function()
+    local hum = plr.Character:FindFirstChild("Humanoid")
+    if hum then
+        hum.WalkSpeed = hum.WalkSpeed == 16 and 60 or 16
     end
-})
+end)
 
-seaTab:AddToggle({
-    Name = "Auto Mirage Island Hop",
-    Default = false,
-    Callback = function(v)
-        autoMirage = v
-        while autoMirage do
-            task.wait(15)
-            -- Hop server atau teleport ke Mirage Island
-        end
-    end
-})
-
--- MISC TAB
-local miscTab = Window:MakeTab({Name = "Misc", Icon = "rbxassetid://6034509993", PremiumOnly = false})
-
-miscTab:AddButton({
-    Name = "WalkSpeed Boost",
-    Callback = function()
-        local h = lp.Character and lp.Character:FindFirstChild("Humanoid")
-        if h then h.WalkSpeed = (h.WalkSpeed == 16 and 60 or 16) end
-    end
-})
-
-miscTab:AddToggle({
-    Name = "Auto Haki",
-    Default = false,
-    Callback = function(v)
-        -- aktifkan haki saat menyerang
-    end
-})
-
-OrionLib:Init()
-print("[ARD HUB Loaded]")
+makeBtn("Toggle GUI", function()
+    frame.Visible = not frame.Visible
+end)
